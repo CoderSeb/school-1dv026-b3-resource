@@ -42,8 +42,12 @@ export class ResourceController {
   async getOneImage (req, res, next) {
     const userData = verifyRequest(req.token)
     if (userData !== null) {
-      const images = await Image.find({})
-      res.json(images)
+      const image = await Image.find({ id: req.params.id })
+      if (image.length < 1) {
+        res.status(404).send('Image with id not found')
+      } else {
+        res.json(image[0].toClient())
+      }
     } else {
       res.status(403).send('JWT Validation failed')
     }

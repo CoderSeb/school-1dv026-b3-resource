@@ -35,5 +35,12 @@ const schema = new mongoose.Schema({
   timestamps: true
 })
 
+schema.method('toClient', function () {
+  const obj = this.toObject()
+  delete obj._id
+  delete obj.__v
+  return obj
+})
+
 // Create a model using the schema.
 export const Image = mongoose.model('Image', schema)
