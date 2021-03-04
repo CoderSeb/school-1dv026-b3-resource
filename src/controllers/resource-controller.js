@@ -43,26 +43,24 @@ export class ResourceController {
     try {
       const userData = verifyRequest(req.token)
       if (userData !== null) {
-        const { data, contentType, location, description } = await req.body
-        const imageData = {
-          data: data,
-          contentType: contentType,
-          location: location || null,
-          description: description || null
-        }
-
-        axios({
+        const bodyInput = await req.body
+        const imageData = JSON.stringify(bodyInput)
+        const config = {
           method: 'post',
           url: `${process.env.EXT_IMAGE_LIB_URL}/images`,
           headers: {
             'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN,
             'Content-Type': 'application/json'
           },
-          data: JSON.stringify(imageData)
-        }).then(response => {
-          res.json(response)
+          data: imageData
+        }
+        axios(config).then(async (response) => {
+          if (response.data.imageUrl && response.status === 201) {
+            const newImage = new Image(response.data)
+            await newImage.save()
+            res.status(201).json(response.data)
+          }
         }).catch(err => {
-          res.json(err)
           next(err)
         })
       } else {

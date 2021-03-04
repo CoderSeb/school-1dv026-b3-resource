@@ -24,6 +24,12 @@ const schema = new mongoose.Schema({
   },
   id: {
     type: String
+  },
+  createdAt: {
+    type: String
+  },
+  updatedAt: {
+    type: String
   }
 }, {
   timestamps: true
