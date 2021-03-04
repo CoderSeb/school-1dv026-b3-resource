@@ -13,6 +13,7 @@ export const router = express.Router()
 const controller = new ResourceController()
 
 router.get('/images', verifyToken, controller.getAllImages)
+router.post('/images', verifyToken, controller.postImage)
 
 /**
  * Verifies that a token exists, else it returns a 403.
@@ -32,7 +33,7 @@ function verifyToken (req, res, next) {
     req.token = token
     next()
   } else {
-    res.sendStatus(403)
+    res.status(401).send('Bearer token is missing')
   }
 }
 
