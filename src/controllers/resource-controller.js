@@ -8,7 +8,6 @@
 // Imports
 import { Image } from '../models/image.js'
 import jwt from 'jsonwebtoken'
-import fs from 'fs-extra'
 import axios from 'axios'
 
 /**
@@ -250,7 +249,7 @@ export class ResourceController {
  */
 function verifyRequest (token) {
   let result = null
-  const publicKey = fs.readFileSync('./public.pem', 'utf8')
+  const publicKey = Buffer.from(process.env.PUBLIC_KEY64, 'base64')
   jwt.verify(token, publicKey, { algorithms: ['RS256'] }, function (err, data) {
     if (err) {
       return result
