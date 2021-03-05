@@ -89,9 +89,16 @@ export class ResourceController {
         }
         axios(config).then(async (response) => {
           if (response.data.imageUrl && response.status === 201) {
-            const newImage = new Image(response.data)
+            const newImage = new Image({
+              id: response.data.id,
+              imageUrl: response.data.imageUrl,
+              createdAt: response.data.createdAt,
+              updatedAt: response.data.updatedAt,
+              description: bodyInput.description || null,
+              location: bodyInput.location || null
+            })
             await newImage.save()
-            res.status(201).json(response.data)
+            res.status(201).json(newImage.toClient())
           }
         }).catch(err => {
           next(err)
@@ -127,7 +134,34 @@ export class ResourceController {
           data: imageData
         }
         axios(config).then(response => {
-          console.log(response.headers)
+          if (response.status === 204) {
+            const config = {
+              method: 'get',
+              url: `${process.env.EXT_IMAGE_LIB_URL}/images/${req.params.id}`,
+              headers: {
+                'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN,
+                'Content-Type': 'application/json'
+              }
+            }
+            axios(config).then(resp => {
+              console.log(resp.data)
+              Image.updateOne({ id: req.params.id }, {
+                imageUrl: resp.data.imageUrl,
+                createdAt: resp.data.createdAt,
+                updatedAt: resp.data.updatedAt,
+                description: bodyInput.description || null,
+                location: bodyInput.location || null
+              }, (err, updated) => {
+                if (err) next(err)
+                console.log(updated)
+                res.sendStatus(204)
+              })
+            }).catch(err => {
+              next(err)
+            })
+          } else {
+            console.log('Error??')
+          }
         }).catch(err => {
           next(err)
         })

@@ -26,10 +26,10 @@ const schema = new mongoose.Schema({
     type: String
   },
   createdAt: {
-    type: String
+    type: Date
   },
   updatedAt: {
-    type: String
+    type: Date
   }
 }, {
   timestamps: true
@@ -39,6 +39,8 @@ schema.method('toClient', function () {
   const obj = this.toObject()
   delete obj._id
   delete obj.__v
+  if (obj.description === null) delete obj.description
+  if (obj.location === null) delete obj.location
   return obj
 })
 
