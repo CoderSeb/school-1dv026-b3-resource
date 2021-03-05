@@ -22,6 +22,8 @@ const main = async () => {
   const app = express()
   app.use(helmet())
   app.use(logger('dev'))
+
+  // Set limit.
   app.use(express.json({ limit: '500kb' }))
 
   // Error handler.
