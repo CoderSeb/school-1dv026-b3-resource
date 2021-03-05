@@ -128,23 +128,20 @@ export class ResourceController {
           method: 'put',
           url: `${process.env.EXT_IMAGE_LIB_URL}/images/${req.params.id}`,
           headers: {
-            'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN,
-            'Content-Type': 'application/json'
-          },
-          data: imageData
+            'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN
+          }
         }
-        axios(config).then(response => {
+        axios(config, imageData).then(response => {
           if (response.status === 204) {
             const config = {
               method: 'get',
               url: `${process.env.EXT_IMAGE_LIB_URL}/images/${req.params.id}`,
               headers: {
-                'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN,
-                'Content-Type': 'application/json'
+                'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN
               }
             }
             axios(config).then(resp => {
-              console.log(resp.data)
+              console.log('Get reached!')
               Image.updateOne({ id: req.params.id }, {
                 imageUrl: resp.data.imageUrl,
                 createdAt: resp.data.createdAt,
@@ -153,17 +150,48 @@ export class ResourceController {
                 location: bodyInput.location || null
               }, (err, updated) => {
                 if (err) next(err)
-                console.log(updated)
                 res.sendStatus(204)
               })
             }).catch(err => {
               next(err)
             })
-          } else {
-            console.log('Error??')
           }
         }).catch(err => {
-          next(err)
+          if (err.response.status === 404) {
+            res.status(404).send('Image with id not found')
+          } else {
+            next(err)
+          }
+        })
+      } else {
+        res.status(403).send('JWT Validation failed')
+      }
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  /**
+   * Partially updates an image.
+   *
+   * @param {object} req - Express request object.
+   * @param {object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
+   */
+  async partialUpdateImage (req, res, next) {
+    try {
+      const userData = verifyRequest(req.token)
+      if (userData !== null) {
+        const imageToBeUpdated = await Image.find({ id: req.params.id })
+        if (imageToBeUpdated.length < 1) {
+          res.status(404).send('Image with id not found')
+        }
+        Image.findOneAndUpdate({ id: req.params.id }, {
+          description: req.body.description || imageToBeUpdated[0].description,
+          location: req.body.location || imageToBeUpdated[0].location
+        }, (err, image) => {
+          if (err) next(err)
+          res.sendStatus(204)
         })
       } else {
         res.status(403).send('JWT Validation failed')
@@ -195,8 +223,8 @@ export class ResourceController {
           if (response.status === 204) {
             Image.deleteOne({ id: req.params.id }, function (err) {
               if (err) next(err)
+              res.sendStatus(204)
             })
-            res.status(204).send('Image deleted')
           }
         }).catch(err => {
           if (err.response.status === 404) {
