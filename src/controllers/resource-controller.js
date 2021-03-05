@@ -115,13 +115,49 @@ export class ResourceController {
           data: imageData
         }
         axios(config).then(async (response) => {
-          if (response.status === 204) {
-            console.log(response.data)
-            Image.findOneAndUpdate({ id: req.params.id }, response.data)
-            res.status(204).json(response.data)
-          }
+          console.log(response.headers)
         }).catch(err => {
           next(err)
+        })
+      } else {
+        res.status(403).send('JWT Validation failed')
+      }
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  /**
+   * Delete an image.
+   *
+   * @param {object} req - Express request object.
+   * @param {object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
+   */
+  async deleteImage (req, res, next) {
+    try {
+      const userData = verifyRequest(req.token)
+      if (userData !== null) {
+        const config = {
+          method: 'delete',
+          url: `${process.env.EXT_IMAGE_LIB_URL}/images/${req.params.id}`,
+          headers: {
+            'PRIVATE-TOKEN': process.env.PRIVATE_ACCESS_TOKEN
+          }
+        }
+        axios(config).then(response => {
+          if (response.status === 204) {
+            Image.deleteOne({ id: req.params.id }, function (err) {
+              if (err) next(err)
+            })
+            res.status(204).send('Image deleted')
+          }
+        }).catch(err => {
+          if (err.response.status === 404) {
+            res.status(404).send('Image with id not found')
+          } else {
+            next(err)
+          }
         })
       } else {
         res.status(403).send('JWT Validation failed')

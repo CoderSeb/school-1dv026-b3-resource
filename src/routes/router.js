@@ -16,6 +16,7 @@ router.get('/images', verifyToken, controller.getAllImages)
 router.post('/images', verifyToken, controller.postImage)
 router.get('/images/:id', verifyToken, controller.getOneImage)
 router.put('/images/:id', verifyToken, controller.fullUpdateImage)
+router.delete('/images/:id', verifyToken, controller.deleteImage)
 
 /**
  * Verifies that a token exists, else it returns a 403.
