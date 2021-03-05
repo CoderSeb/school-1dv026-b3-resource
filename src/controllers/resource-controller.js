@@ -24,11 +24,19 @@ export class ResourceController {
    */
   async getAllImages (req, res, next) {
     const userData = verifyRequest(req.token)
-    if (userData !== null) {
-      const images = await Image.find({})
-      res.json(images)
-    } else {
-      res.status(403).send('JWT Validation failed')
+    try {
+      if (userData !== null) {
+        const imagePayload = []
+        const images = await Image.find({})
+        for (let i = 0; i < images.length; i++) {
+          imagePayload.push(images[i].toClient())
+        }
+        res.json(imagePayload)
+      } else {
+        res.status(403).send('JWT Validation failed')
+      }
+    } catch (err) {
+      next(err)
     }
   }
 
@@ -41,15 +49,19 @@ export class ResourceController {
    */
   async getOneImage (req, res, next) {
     const userData = verifyRequest(req.token)
-    if (userData !== null) {
-      const image = await Image.find({ id: req.params.id })
-      if (image.length < 1) {
-        res.status(404).send('Image with id not found')
+    try {
+      if (userData !== null) {
+        const image = await Image.find({ id: req.params.id })
+        if (image.length < 1) {
+          res.status(404).send('Image with id not found')
+        } else {
+          res.json(image[0].toClient())
+        }
       } else {
-        res.json(image[0].toClient())
+        res.status(403).send('JWT Validation failed')
       }
-    } else {
-      res.status(403).send('JWT Validation failed')
+    } catch (err) {
+      next(err)
     }
   }
 
@@ -114,7 +126,7 @@ export class ResourceController {
           },
           data: imageData
         }
-        axios(config).then(async (response) => {
+        axios(config).then(response => {
           console.log(response.headers)
         }).catch(err => {
           next(err)
