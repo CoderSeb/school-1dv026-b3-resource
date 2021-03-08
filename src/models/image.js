@@ -30,6 +30,9 @@ const schema = new mongoose.Schema({
   },
   updatedAt: {
     type: Date
+  },
+  author: {
+    type: String
   }
 }, {
   timestamps: true

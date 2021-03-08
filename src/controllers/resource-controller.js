@@ -26,7 +26,7 @@ export class ResourceController {
     try {
       if (userData !== null) {
         const imagePayload = []
-        const images = await Image.find({})
+        const images = await Image.find({ author: userData.email })
         for (let i = 0; i < images.length; i++) {
           imagePayload.push(images[i].toClient())
         }
@@ -94,7 +94,8 @@ export class ResourceController {
               createdAt: response.data.createdAt,
               updatedAt: response.data.updatedAt,
               description: bodyInput.description || null,
-              location: bodyInput.location || null
+              location: bodyInput.location || null,
+              author: userData.email
             })
             await newImage.save()
             res.status(201).json(newImage.toClient())
@@ -146,7 +147,8 @@ export class ResourceController {
                 createdAt: resp.data.createdAt,
                 updatedAt: resp.data.updatedAt,
                 description: bodyInput.description || null,
-                location: bodyInput.location || null
+                location: bodyInput.location || null,
+                author: userData.email
               }, (err, updated) => {
                 if (err) next(err)
                 res.sendStatus(204)
@@ -181,7 +183,7 @@ export class ResourceController {
     try {
       const userData = verifyRequest(req.token)
       if (userData !== null) {
-        const imageToBeUpdated = await Image.find({ id: req.params.id })
+        const imageToBeUpdated = await Image.find({ id: req.params.id, author: userData.email })
         if (imageToBeUpdated.length < 1) {
           res.status(404).send('Image with id not found')
         }
@@ -220,7 +222,7 @@ export class ResourceController {
         }
         axios(config).then(response => {
           if (response.status === 204) {
-            Image.deleteOne({ id: req.params.id }, function (err) {
+            Image.deleteOne({ id: req.params.id, author: userData.email }, function (err) {
               if (err) next(err)
               res.sendStatus(204)
             })
